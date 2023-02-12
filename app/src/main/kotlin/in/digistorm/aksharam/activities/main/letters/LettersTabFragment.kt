@@ -23,42 +23,40 @@ import `in`.digistorm.aksharam.R
 import `in`.digistorm.aksharam.activities.main.MainActivity
 import `in`.digistorm.aksharam.activities.main.TabbedViewsDirections
 import `in`.digistorm.aksharam.activities.main.models.AksharamViewModel
+import `in`.digistorm.aksharam.databinding.FragmentLettersTabBinding
 import `in`.digistorm.aksharam.util.*
 
 import android.os.Bundle
 import android.view.*
 import android.widget.*
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.navGraphViewModels
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 class LettersTabFragment: Fragment() {
     private val logTag = javaClass.simpleName
 
+    private lateinit var binding: FragmentLettersTabBinding
     private val viewModel: LettersTabViewModel by viewModels()
     private val activityViewModel: AksharamViewModel by activityViewModels()
 
-    private lateinit var languageListAdapter: ArrayAdapter<String>
     private lateinit var convertToListAdapter: ArrayAdapter<String>
 
     private lateinit var letterCategoryListView: RecyclerView
     private lateinit var convertToSelector: TextInputLayout
-    private val convertToTextView: AutoCompleteTextView?
+    private val convertToTextView: MaterialAutoCompleteTextView
         get() {
-            return convertToSelector.editText as? MaterialAutoCompleteTextView
-        }
-    private lateinit var languageSelector: TextInputLayout
-    private val languageTextView: AutoCompleteTextView?
-        get() {
-            return languageSelector.editText as? MaterialAutoCompleteTextView
+            return convertToSelector.editText as MaterialAutoCompleteTextView
         }
 
     // A simple lock to prevent multiple observers from trying to update the UI
@@ -68,115 +66,42 @@ class LettersTabFragment: Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.fragment_letters_tab, container, false)
+        binding = FragmentLettersTabBinding.inflate(inflater, container, false)
+        binding.lifecycleOwner = viewLifecycleOwner
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         logDebug(logTag, "onViewCreated")
 
+        letterCategoryListView = binding.letterCategories
+        convertToSelector = binding.convertToSelector
+
+        val languageDataFetcher: (file: String) -> Language = { file ->
+            getLanguageData(file, requireContext())!!
+        }
+        viewModel.initialise(
+            activityViewModel = activityViewModel,
+            downloadedLanguages = getAllDownloadedLanguages(),
+            languageDataFetcher = languageDataFetcher,
+            setConvertTo = { language ->
+                (binding.convertToSelector.editText as MaterialAutoCompleteTextView)
+                    .setText(language, false)
+            }
+        )
+
+        binding.viewModel = viewModel
+        (binding.languageSelector.editText as MaterialAutoCompleteTextView)
+            .setText(viewModel.languageSelected, false)
+        // (binding.convertToSelector.editText as MaterialAutoCompleteTextView)
+         //   .setText(viewModel.targetLanguage, false)
+
         // Initialise a default language
-        val language = getLanguageData(getDownloadedFiles(requireContext()).first(), requireContext())
-        if(language == null) {
+        // val language = getLanguageData(getDownloadedFiles(requireContext()).first(), requireContext())
+        if(viewModel.language.value == null) {
             // TODO: Start initialisation activity?
-        } else {
-            viewModel.setLanguage(language, activityViewModel)
-            logDebug(
-                logTag,
-                "Letters category wise: ${language.lettersCategoryWise}"
-            )
-            letterCategoryListView = view.findViewById(R.id.letter_categories)!!
-            languageSelector = view.findViewById(R.id.language_selector)
-            convertToSelector = view.findViewById(R.id.convert_to_selector)
-
-            initialiseLanguageSelector(view)
-            initialiseLettersTabTransSpinner(view)
-
-            // Set up the info button
-            view.findViewById<View>(R.id.lettersTabInfoButton).setOnClickListener { v: View? ->
-                logDebug(logTag, "Info button clicked!")
-                logDebug(
-                    logTag,
-                    "Fetching info for transliterating ${language.language} to ${viewModel.targetLanguage}"
-                )
-                val info: HashMap<String, Map<String, String>> = language.info
-                logDebug(logTag, "Data for info: $info")
-                val action = TabbedViewsDirections.actionTabbedViewsFragmentToLanguageInfoFragment(
-                    targetLanguage = viewModel.targetLanguage
-                )
-                findNavController().navigate(action)
-            }
-
-            val categoryListViewAdapter = LetterCategoryAdapter(::letterOnLongClickListener)
-            letterCategoryListView.adapter = categoryListViewAdapter
-            categoryListViewAdapter.submitList(lettersCategoryWise())
-
-            logDebug(logTag, "Setting up observers for view model data")
-            initObservers(view)
-        }
-    }
-
-    private fun lettersCategoryWise(): List<Map<String, ArrayList<Pair<String, String>>>> {
-        val categories = mutableListOf<Map<String, ArrayList<Pair<String, String>>>>()
-        // [{"vowels": ["a", "e",...]}, {"consonants":: ["b", "c", "d",...]}, ...]
-        val language = viewModel.getLanguage()
-        language.lettersCategoryWise.forEach { (category, letters) ->
-            val transliteratedLetterPairs: ArrayList<Pair<String, String>> = ArrayList()
-            letters.forEach { letter ->
-                transliteratedLetterPairs.add(letter to transliterate(letter, viewModel.targetLanguage, language))
-            }
-            categories.add(mapOf(category to transliteratedLetterPairs))
-        }
-        logDebug(logTag, "Category list created: $categories")
-        return categories
-    }
-
-    private fun letterOnLongClickListener(letter: String): ((View) -> Boolean) {
-        val language = viewModel.getLanguage()
-        return  { letterView ->
-            logDebug(logTag, "$letter long clicked!")
-            val letterExamples = language.getLetterDefinition(letter)!!.examples
-            val targetLanguageCode = language.getLanguageCode(viewModel.targetLanguage)
-
-            val letterCategory = language.getLetterDefinition(letter)?.type!!
-            val shouldExcludeCombinationExamples = language.getLetterDefinition(letter)?.shouldExcludeCombiExamples() ?: false
-            val ligaturesAreAutoGeneratable = language.areLigaturesAutoGeneratable()
-            // signs = diacritics
-            val signCombinations = ArrayList<String>()
-            val prefixConsonants = ArrayList<String>()
-            val suffixConsonants = ArrayList<String>()
-            if(!shouldExcludeCombinationExamples && (letterCategory == "signs" || letterCategory == "consonants" || letterCategory == "ligatures")) {
-                when(letterCategory) {
-                    "signs" -> {
-                        val lettersToCombineWith = language.getLettersOfCategory("consonants")
-                        lettersToCombineWith.addAll(language.getLettersOfCategory("ligatures"))
-                        val sign = letter
-                        lettersToCombineWith.forEach { letter ->
-                            signCombinations.add(letter + sign)
-                        }
-                    }
-                    "consonants" -> {
-                        val signs = language.getLettersOfCategory("signs")
-                        signs.forEach { sign ->
-                            signCombinations.add(letter + sign)
-                        }
-                        if(ligaturesAreAutoGeneratable) {
-                            val consonants = language.getLettersOfCategory("consonants")
-                            val virama = language.virama
-                            consonants.forEach { consonant ->
-                                prefixConsonants.add(consonant + virama + letter)
-                                suffixConsonants.add(letter + virama + consonant)
-                            }
-                        }
-                    }
-                }
-            }
-            val action = TabbedViewsDirections.actionTabbedViewsFragmentToLetterInfoFragment(
-                letter = letter,
-                targetLanguage = viewModel.targetLanguage
-            )
-            findNavController().navigate(action)
-            true
+            logDebug(logTag, "Language is null in ViewModel.")
         }
     }
 
@@ -192,49 +117,36 @@ class LettersTabFragment: Fragment() {
         return languages
     }
 
+    /*
+    TODO: Condense or remove
     private fun initialiseLanguageSelector(view: View) {
         logDebug(logTag, "Initialising LettersTabLangSpinner")
-        val languages = getAllDownloadedLanguages()
-        languageListAdapter = ArrayAdapter(
-            requireContext(),
-            R.layout.drop_down_item,
-            languages,
-        )
-        languageListAdapter.setNotifyOnChange(true)
+        viewModel.downloadedLanguages.value = getAllDownloadedLanguages()
 
-        languageTextView?.setAdapter(languageListAdapter)
-        val language = viewModel.getLanguage()
-        val upperCasedLanguage = languages.first().replaceFirstChar {
+        val upperCasedLanguage = viewModel.downloadedLanguages.value?.first()?.replaceFirstChar {
             if (it.isLowerCase())
                 it.titlecase()
             else
                 it.toString()
         }
         logDebug(logTag, "Setting current selection to $upperCasedLanguage")
-        logDebug(logTag, "Its adapter position is ${languageListAdapter.getPosition(upperCasedLanguage)}")
+//        logDebug(logTag, "Its adapter position is ${languageListAdapter.getPosition(upperCasedLanguage)}")
         // Initialise the dropdown
-        languageTextView?.setText(upperCasedLanguage, false)
-        // Update view model when language selection changes
-        languageTextView?.onItemClickListener = AdapterView.OnItemClickListener(
-            fun (parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                logDebug(logTag, "LanguageSelector: ${languageListAdapter.getItem(position)} clicked.")
-                viewModel.languageSelected = languageListAdapter.getItem(position)!!
-            }
-        )
+        // languageTextView.setText(upperCasedLanguage, false)
 
-        /* TODO: Verify and re-work language list under this drop down when one or more languages
-           have been deleted/downloaded */
+        /**
+         * TODO: Verify and re-work language list under this drop down when one or more languages
+         * have been deleted/downloaded
+         */
         GlobalSettings.instance?.addDataFileListChangedListener("LettersTabFragmentListener",
             object: DataFileListChanged {
                 override fun onDataFileListChanged() {
                     logDebug("LTFListener", "Refreshing LettersTabFragment adapter")
                     if (context == null)
                         return
-                    languageListAdapter.clear()
-                    languageListAdapter.addAll(getAllDownloadedLanguages())
                     // adapter.notifyDataSetChanged();
                     // While the spinner shows updated text, its (Spinner's) getSelectedView() was sometimes returning
-                    // a non-existant item (say, if the item is deleted). Resetting the adapter was the only way I could
+                    // a non-existent item (say, if the item is deleted). Resetting the adapter was the only way I could
                     // think of to fix this
                     logDebug("LTFListener", "Resetting spinner adapter")
                     // lettersTabLangSpinner.adapter = adapter
@@ -244,7 +156,7 @@ class LettersTabFragment: Fragment() {
 
     private fun initialiseLettersTabTransSpinner(view: View) {
         logDebug(logTag, "Initialising \"Convert To\" spinner.")
-        val transliterationLanguages = viewModel.getLanguage().supportedLanguagesForTransliteration
+        val transliterationLanguages = viewModel.language.value!!.supportedLanguagesForTransliteration
         convertToListAdapter = ArrayAdapter(
             requireContext(),
             R.layout.drop_down_item,
@@ -252,20 +164,22 @@ class LettersTabFragment: Fragment() {
         )
         convertToListAdapter.setNotifyOnChange(true)
 
-        convertToTextView?.setAdapter(convertToListAdapter)
+        convertToTextView.setAdapter(convertToListAdapter)
 
         // viewModel.targetLanguage = transliterationLanguages[0]
         logDebug(logTag, "Set initial target language to: ${transliterationLanguages[0]}")
         logDebug(logTag, "Its adapter position is ${convertToListAdapter.getPosition(transliterationLanguages[0])}")
         // Initialise the drop down
-        convertToTextView?.setText(transliterationLanguages[0], false)
+        convertToTextView.setText(transliterationLanguages[0], false)
         // Initialise in the view model too
         viewModel.targetLanguage = transliterationLanguages[0]
 
-        convertToTextView?.onItemClickListener = AdapterView.OnItemClickListener(
+        convertToTextView.onItemClickListener = AdapterView.OnItemClickListener(
             fun (parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 logDebug(logTag, "ConvertToSelector: ${convertToListAdapter.getItem(position)} clicked.")
-                viewModel.targetLanguage = convertToListAdapter.getItem(position)!!
+                val itemAtPosition = convertToListAdapter.getItem(position)!!
+                if(viewModel.targetLanguage != itemAtPosition)
+                    viewModel.targetLanguage = itemAtPosition
             }
         )
     }
@@ -303,9 +217,9 @@ class LettersTabFragment: Fragment() {
         }
 
         // When targetLanguage is updated, update transliterated letter
-        viewModel.targetLanguageLiveData.observe(viewLifecycleOwner) {
+        viewModel.targetLanguageLiveData.observe(viewLifecycleOwner) { newTargetLanguage ->
             val logBegin = "targetLanguageObserver:"
-            logDebug(logTag, "$logBegin Change detected")
+            logDebug(logTag, "$logBegin change detected")
             if(uiUpdateLock) {
                 logDebug(logTag, "$logBegin UI Locked. Returning...")
                 uiUpdateLock = false
@@ -315,9 +229,10 @@ class LettersTabFragment: Fragment() {
                 list.addAll(viewModel.getLanguage().lettersCategoryWise.keys)
                 val adapter: LetterCategoryAdapter =
                     letterCategoryListView.adapter as LetterCategoryAdapter
-                // adapter.updateTargetLanguage(viewModel.targetLanguage)
-                // adapter.updateLetterGrids(letterCategoryListView)
+                adapter.submitList(lettersCategoryWise())
             }
         }
     }
+    */
+
 }

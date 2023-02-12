@@ -17,7 +17,7 @@ fun generatePracticeString(viewModel: PracticeTabViewModel): String {
     val vowels = viewModel.getLanguageData().vowels
     val consonants = viewModel.getLanguageData().consonants
     val ligatures = viewModel.getLanguageData().ligatures
-    val signs = viewModel.getLanguageData().diacritics
+    val signs = viewModel.getLanguageData().signs
     val chillu = viewModel.getLanguageData().chillu
     val random = Random()
     var practiceString = StringBuilder()
