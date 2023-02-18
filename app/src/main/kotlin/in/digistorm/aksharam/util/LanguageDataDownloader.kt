@@ -19,48 +19,50 @@
  */
 package `in`.digistorm.aksharam.util
 
-import retrofit2.http.GET
-import kotlin.Throws
-import org.json.JSONArray
 import android.app.Activity
 import android.content.Context
 import okhttp3.*
+import org.json.JSONArray
 import org.json.JSONException
 import retrofit2.Call
 import retrofit2.Retrofit
+import retrofit2.http.GET
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
 class LanguageDataDownloader {
+
     private val logTag = javaClass.simpleName
     private val baseUrl = "https://api.github.com/repos/NyxTrail/aksharam-data/"
     private val okHttpClient: OkHttpClient
 
     private interface GitHubAPI {
+
         @get:GET("contents?ref=1.0")
         val contents: Call<ResponseBody?>
     }
 
     private inner class LoggingInterceptor : Interceptor {
+
         @Throws(IOException::class)
         override fun intercept(chain: Interceptor.Chain): Response {
             val request = chain.request()
             logDebug(
                 logTag, String.format(
-                    "Sending request%n%s %s on %s%n%s", request.method(),
-                    request.url(),
-                    chain.connection(), request.headers()
+                    "Sending request%n%s %s on %s%n%s", request.method,
+                    request.url,
+                    chain.connection(), request.headers
                 )
             )
             val response = chain.proceed(request)
             logDebug(
                 logTag, String.format(
                     "Received response for %s %s:%n%s%n",
-                    response.request().method(),
-                    response.request().url(),
-                    response.headers()
+                    response.request.method,
+                    response.request.url,
+                    response.headers
                 )
             )
             return response
@@ -91,16 +93,16 @@ class LanguageDataDownloader {
                     val call = okHttpClient.newCall(request)
                     try {
                         val response = call.execute()
-                        if (response.body() == null) throw IOException("Obtained empty body.")
-                        val responseString = response.body()!!.string()
+                        if (response.body == null) throw IOException("Obtained empty body.")
+                        val responseString = response.body!!.string()
                         // Let's log only first 100 characters of the file here
                         logDebug(
                             logTag,
                             "Response received.\n" +
-                            "Code: ${response.code()}\n" +
-                            "Data: ${responseString.substring(0, 100)} ..."
+                                    "Code: ${response.code}\n" +
+                                    "Data: ${responseString.substring(0, 100)} ..."
                         )
-                        if(response.code() == 200) {
+                        if (response.code == 200) {
                             val fos = activity.openFileOutput(
                                 item.getString("name"),
                                 Context.MODE_PRIVATE
@@ -111,10 +113,9 @@ class LanguageDataDownloader {
                             )
                             fos.write(responseString.toByteArray(StandardCharsets.UTF_8))
                             fos.close()
-                        }
-                        else {
+                        } else {
                             logDebug(logTag, "Error code received from server.")
-                            callback.onDownloadFailed(Exception("Download failed with status: ${response.code()}"))
+                            callback.onDownloadFailed(Exception("Download failed with status: ${response.code}"))
                         }
                     } catch (ie: IOException) {
                         logDebug(logTag, "IOException while downloading file")
@@ -158,8 +159,8 @@ class LanguageDataDownloader {
         GlobalSettings.instance?.threadPoolExecutor?.execute {
             try {
                 val response = call.execute()
-                if (response.body() == null) throw IOException("Obtained empty body.")
-                val responseString = response.body()!!.string()
+                if (response.body == null) throw IOException("Obtained empty body.")
+                val responseString = response.body!!.string()
                 // Let's log only first 100 characters of the file here
                 logDebug(logTag, "Obtained response: " + responseString.substring(0, 100) + "...")
                 val fos = activity.openFileOutput(fileName, Context.MODE_PRIVATE)

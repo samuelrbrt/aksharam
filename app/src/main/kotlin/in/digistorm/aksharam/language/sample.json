@@ -1,0 +1,50 @@
+[
+  {
+    "name": "hindi.json",
+    "path": "hindi.json",
+    "sha": "b7e2197ddf9cf98eaf7b6d780a9b5c120adec86b",
+    "size": 20649,
+    "url": "https://api.github.com/repos/NyxTrail/aksharam-data/contents/hindi.json?ref=1.0",
+    "html_url": "https://github.com/NyxTrail/aksharam-data/blob/1.0/hindi.json",
+    "git_url": "https://api.github.com/repos/NyxTrail/aksharam-data/git/blobs/b7e2197ddf9cf98eaf7b6d780a9b5c120adec86b",
+    "download_url": "https://raw.githubusercontent.com/NyxTrail/aksharam-data/1.0/hindi.json",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/NyxTrail/aksharam-data/contents/hindi.json?ref=1.0",
+      "git": "https://api.github.com/repos/NyxTrail/aksharam-data/git/blobs/b7e2197ddf9cf98eaf7b6d780a9b5c120adec86b",
+      "html": "https://github.com/NyxTrail/aksharam-data/blob/1.0/hindi.json"
+    }
+  },
+  {
+    "name": "kannada.json",
+    "path": "kannada.json",
+    "sha": "2589d2b5c6d08f0f6c91a70201c98f0d6e90a74a",
+    "size": 24513,
+    "url": "https://api.github.com/repos/NyxTrail/aksharam-data/contents/kannada.json?ref=1.0",
+    "html_url": "https://github.com/NyxTrail/aksharam-data/blob/1.0/kannada.json",
+    "git_url": "https://api.github.com/repos/NyxTrail/aksharam-data/git/blobs/2589d2b5c6d08f0f6c91a70201c98f0d6e90a74a",
+    "download_url": "https://raw.githubusercontent.com/NyxTrail/aksharam-data/1.0/kannada.json",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/NyxTrail/aksharam-data/contents/kannada.json?ref=1.0",
+      "git": "https://api.github.com/repos/NyxTrail/aksharam-data/git/blobs/2589d2b5c6d08f0f6c91a70201c98f0d6e90a74a",
+      "html": "https://github.com/NyxTrail/aksharam-data/blob/1.0/kannada.json"
+    }
+  },
+  {
+    "name": "malayalam.json",
+    "path": "malayalam.json",
+    "sha": "5454a8128209348ef19ae95cab871b38b1f27ff2",
+    "size": 32062,
+    "url": "https://api.github.com/repos/NyxTrail/aksharam-data/contents/malayalam.json?ref=1.0",
+    "html_url": "https://github.com/NyxTrail/aksharam-data/blob/1.0/malayalam.json",
+    "git_url": "https://api.github.com/repos/NyxTrail/aksharam-data/git/blobs/5454a8128209348ef19ae95cab871b38b1f27ff2",
+    "download_url": "https://raw.githubusercontent.com/NyxTrail/aksharam-data/1.0/malayalam.json",
+    "type": "file",
+    "_links": {
+      "self": "https://api.github.com/repos/NyxTrail/aksharam-data/contents/malayalam.json?ref=1.0",
+      "git": "https://api.github.com/repos/NyxTrail/aksharam-data/git/blobs/5454a8128209348ef19ae95cab871b38b1f27ff2",
+      "html": "https://github.com/NyxTrail/aksharam-data/blob/1.0/malayalam.json"
+    }
+  }
+]

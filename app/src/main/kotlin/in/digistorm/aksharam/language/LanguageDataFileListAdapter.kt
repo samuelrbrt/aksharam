@@ -17,9 +17,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-package `in`.digistorm.aksharam.activities.initialise
+package `in`.digistorm.aksharam.language
 
 import `in`.digistorm.aksharam.R
+import `in`.digistorm.aksharam.language.LanguageDataFileListAdapter.ViewHolder
 import `in`.digistorm.aksharam.util.logDebug
 
 import org.json.JSONArray
@@ -33,14 +34,14 @@ import kotlin.Throws
 import org.json.JSONObject
 
 class LanguageDataFileListAdapter(val dataFileList: JSONArray) :
-    RecyclerView.Adapter<LanguageDataFileListAdapter.ViewHolder>() {
+    RecyclerView.Adapter<ViewHolder>() {
     // apparently log tag can at most be 23 characters
     private val logTag = javaClass.simpleName
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         logDebug(logTag, "Initialising adapter for language data file list...")
         val view: View = LayoutInflater.from(parent.context)
-            .inflate(R.layout.language_data_file_list_item, parent, false)
+            .inflate(R.layout.item_init_lang_select, parent, false)
         return ViewHolder(view)
     }
 
@@ -86,7 +87,7 @@ class LanguageDataFileListAdapter(val dataFileList: JSONArray) :
         val checkedTextView: CheckedTextView
 
         init {
-            checkedTextView = view.findViewById(R.id.LanguageDataFileListCTV)
+            checkedTextView = view.findViewById(R.id.LanguageCTV)
             checkedTextView.setOnClickListener {
                 checkedTextView.isChecked = !checkedTextView.isChecked
             }

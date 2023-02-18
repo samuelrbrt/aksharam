@@ -22,27 +22,17 @@ package `in`.digistorm.aksharam.activities.main
 
 import `in`.digistorm.aksharam.R
 import `in`.digistorm.aksharam.util.GlobalSettings
-import `in`.digistorm.aksharam.activities.htmlinfo.HTMLInfoActivity
-import `in`.digistorm.aksharam.activities.settings.SettingsActivity
-import `in`.digistorm.aksharam.activities.main.letters.LetterInfoFragment
-import `in`.digistorm.aksharam.activities.initialise.InitialiseAppActivity
+import `in`.digistorm.aksharam.language.InitialiseAppActivity
 import `in`.digistorm.aksharam.databinding.ActivityMainBinding
 import `in`.digistorm.aksharam.util.getDownloadedLanguages
 import `in`.digistorm.aksharam.util.logDebug
 
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.tabs.TabLayout.OnTabSelectedListener
 import android.os.Bundle
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
 import android.content.Intent
 import android.view.Menu
 import android.view.MenuItem
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.databinding.DataBindingUtil
-import androidx.fragment.app.Fragment
-import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration

@@ -80,8 +80,8 @@ suspend fun downloadFile(
             )
             .build()
         val response = okHttpClient.newCall(request).execute()
-        if (response.code() == 200) {
-            return@withContext response.body()?.string()
+        if (response.code == 200) {
+            return@withContext response.body?.string()
         } else {
             throw Exception(errorString)
         }
